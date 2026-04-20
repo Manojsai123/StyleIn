@@ -25,27 +25,25 @@ export default function CheckoutPage() {
     }
     setLoading(true);
     try {
-      // Send data to Google Apps Script
-      const orderData = {
-        name: formData.fullName,
-        address: formData.street,
-        city: formData.city,
-        zipcode: formData.zipCode,
-        productname: cart.map(item => `${item.name} (${item.selectedSize}) x${item.quantity}`).join(', '),
-        amount: totalPrice
-      };
-
       try {
-        // Using text/plain with no-cors to reliably deliver JSON to Google Apps Script
-        // without triggering CORS preflight blocks.
-        fetch('https://script.google.com/macros/s/AKfycbw3gGL119vvth611d6mX57D_XgoFpWiUMPvqD079AIK6lRkRL609XqWGjfw7B6pZObi/exec', {
+        // Using form-data approach as it is often more compatible with "simple" Google Apps Scripts
+        // that expect e.parameter instead of e.postData.contents
+        const params = new URLSearchParams();
+        params.append('name', formData.fullName);
+        params.append('address', formData.street);
+        params.append('city', formData.city);
+        params.append('zipcode', formData.zipCode);
+        params.append('productname', cart.map(item => `${item.name} (${item.selectedSize}) x${item.quantity}`).join(', '));
+        params.append('amount', totalPrice.toString());
+
+        await fetch('https://script.google.com/macros/s/AKfycbw3gGL119vvth611d6mX57D_XgoFpWiUMPvqD079AIK6lRkRL609XqWGjfw7B6pZObi/exec', {
           method: 'POST',
           mode: 'no-cors',
           headers: {
-            'Content-Type': 'text/plain'
+            'Content-Type': 'application/x-www-form-urlencoded'
           },
-          body: JSON.stringify(orderData)
-        }).catch(err => console.warn('Silent Script Error:', err));
+          body: params.toString()
+        });
       } catch (scriptErr) {
         console.error('Error initiating Google Script delivery:', scriptErr);
       }
