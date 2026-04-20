@@ -144,7 +144,7 @@ export const api = {
         headers: getHeaders()
       });
       const contentType = res.headers.get('content-type');
-      if (!res.ok || !contentType || !contentType.includes('application/json')) throw new Error([]);
+      if (!res.ok || !contentType || !contentType.includes('application/json')) throw new Error('Failed to fetch');
       return await res.json();
     } catch (e) {
       return [];

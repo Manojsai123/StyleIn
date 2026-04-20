@@ -26,23 +26,25 @@ export default function CheckoutPage() {
     setLoading(true);
     try {
       try {
-        // Using form-data approach as it is often more compatible with "simple" Google Apps Scripts
-        // that expect e.parameter instead of e.postData.contents
-        const params = new URLSearchParams();
-        params.append('name', formData.fullName);
-        params.append('address', formData.street);
-        params.append('city', formData.city);
-        params.append('zipcode', formData.zipCode);
-        params.append('productname', cart.map(item => `${item.name} (${item.selectedSize}) x${item.quantity}`).join(', '));
-        params.append('amount', totalPrice.toString());
+        // Send data to Google Apps Script as JSON
+        const orderData = {
+          name: formData.fullName,
+          address: formData.street,
+          city: formData.city,
+          zipcode: formData.zipCode,
+          productname: cart.map(item => `${item.name} (${item.selectedSize}) x${item.quantity}`).join(', '),
+          amount: totalPrice
+        };
 
+        // We use text/plain with no-cors to ensure the request is sent without a preflight check,
+        // which Google Apps Scripts typically do not handle.
         await fetch('https://script.google.com/macros/s/AKfycbw3gGL119vvth611d6mX57D_XgoFpWiUMPvqD079AIK6lRkRL609XqWGjfw7B6pZObi/exec', {
           method: 'POST',
           mode: 'no-cors',
           headers: {
-            'Content-Type': 'application/x-www-form-urlencoded'
+            'Content-Type': 'text/plain'
           },
-          body: params.toString()
+          body: JSON.stringify(orderData)
         });
       } catch (scriptErr) {
         console.error('Error initiating Google Script delivery:', scriptErr);
