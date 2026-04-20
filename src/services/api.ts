@@ -30,6 +30,15 @@ const getHeaders = () => {
   };
 };
 
+// Shared helper to safely handle JSON parsing and fallback
+const handleResponse = async (res: Response) => {
+  const contentType = res.headers.get('content-type');
+  if (!res.ok || !contentType || !contentType.includes('application/json')) {
+    throw new Error('Not a valid JSON response from server');
+  }
+  return res.json();
+};
+
 export const api = {
   // Auth
   async register(data: any) {
@@ -39,7 +48,7 @@ export const api = {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data)
       });
-      return res.json();
+      return await handleResponse(res);
     } catch (e) {
       // Fallback: Local registration
       const newUser: User = { id: Date.now().toString(), ...data, role: 'user' };
@@ -56,7 +65,7 @@ export const api = {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data)
       });
-      return res.json();
+      return await handleResponse(res);
     } catch (e) {
       // Fallback: Local login
       const users = getLocalUsers();
@@ -72,8 +81,7 @@ export const api = {
   async getProducts(): Promise<Product[]> {
     try {
       const res = await fetch(`${API_BASE}/products`);
-      if (!res.ok) throw new Error();
-      return res.json();
+      return await handleResponse(res);
     } catch (e) {
       return MOCK_PRODUCTS;
     }
@@ -82,8 +90,7 @@ export const api = {
   async getProduct(id: string): Promise<Product> {
     try {
       const res = await fetch(`${API_BASE}/products/${id}`);
-      if (!res.ok) throw new Error();
-      return res.json();
+      return await handleResponse(res);
     } catch (e) {
       const p = MOCK_PRODUCTS.find(p => p.id === id);
       if (!p) throw new Error('Product not found');
@@ -99,8 +106,7 @@ export const api = {
         headers: getHeaders(),
         body: JSON.stringify(orderData)
       });
-      if (!res.ok) throw new Error();
-      return res.json();
+      return await handleResponse(res);
     } catch (e) {
       const userStr = localStorage.getItem('user');
       const user = userStr ? JSON.parse(userStr) : null;
@@ -121,8 +127,7 @@ export const api = {
       const res = await fetch(`${API_BASE}/user/orders`, {
         headers: getHeaders()
       });
-      if (!res.ok) throw new Error();
-      return res.json();
+      return await handleResponse(res);
     } catch (e) {
       const userStr = localStorage.getItem('user');
       const user = userStr ? JSON.parse(userStr) : null;
