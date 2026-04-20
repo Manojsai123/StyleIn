@@ -1,0 +1,41 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Instrument+Serif:ital@0;1&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Instrument Serif", serif;
+  
+  --color-brand-black: #111111;
+  --color-brand-white: #ffffff;
+  --color-brand-grey: #F5F5F7;
+  --color-brand-accent: #FF4E00;
+  --color-brand-muted: #6e6e73;
+}
+
+@layer base {
+  body {
+    @apply bg-white text-brand-black font-sans antialiased;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-brand-black text-white px-8 py-4 rounded-2xl font-semibold transition-all hover:bg-brand-accent hover:-translate-y-1 hover:shadow-lg active:translate-y-0 active:shadow-md disabled:opacity-50;
+  }
+  
+  .btn-outline {
+    @apply border-2 border-brand-black/10 px-8 py-4 rounded-2xl font-semibold transition-all hover:border-brand-black active:scale-95;
+  }
+
+  .nav-link {
+    @apply text-[13px] font-semibold tracking-wide text-brand-muted hover:text-brand-black transition-colors;
+  }
+
+  .card-hover {
+    @apply transition-all duration-500 ease-out hover:-translate-y-2 hover:shadow-xl;
+  }
+
+  .glass {
+    @apply bg-white/70 backdrop-blur-xl;
+  }
+}
