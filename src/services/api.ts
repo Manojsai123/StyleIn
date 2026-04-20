@@ -30,15 +30,6 @@ const getHeaders = () => {
   };
 };
 
-// Shared helper to safely handle JSON parsing and fallback
-const handleResponse = async (res: Response) => {
-  const contentType = res.headers.get('content-type');
-  if (!res.ok || !contentType || !contentType.includes('application/json')) {
-    throw new Error('Not a valid JSON response from server');
-  }
-  return res.json();
-};
-
 export const api = {
   // Auth
   async register(data: any) {
@@ -48,13 +39,15 @@ export const api = {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data)
       });
-      return await handleResponse(res);
+      
+      const contentType = res.headers.get('content-type');
+      if (!res.ok || !contentType || !contentType.includes('application/json')) throw new Error();
+      return await res.json();
     } catch (e) {
       // Fallback: Local registration
       const newUser: User = { id: Date.now().toString(), ...data, role: 'user' };
       saveLocalUser(newUser);
-      const token = `local-token-${newUser.id}`;
-      return { token, user: newUser };
+      return { token: `local-token-${newUser.id}`, user: newUser };
     }
   },
 
@@ -65,15 +58,16 @@ export const api = {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data)
       });
-      return await handleResponse(res);
+      
+      const contentType = res.headers.get('content-type');
+      if (!res.ok || !contentType || !contentType.includes('application/json')) throw new Error();
+      return await res.json();
     } catch (e) {
       // Fallback: Local login
       const users = getLocalUsers();
       const user = users.find(u => u.email === data.email);
-      if (!user) throw new Error('User not found locally');
-      // In a real app we'd verify password, but for safety in static mode we allow local mock login
-      const token = `local-token-${user.id}`;
-      return { token, user };
+      if (!user) throw new Error('User not found');
+      return { token: `local-token-${user.id}`, user };
     }
   },
 
@@ -81,16 +75,20 @@ export const api = {
   async getProducts(): Promise<Product[]> {
     try {
       const res = await fetch(`${API_BASE}/products`);
-      return await handleResponse(res);
+      const contentType = res.headers.get('content-type');
+      if (!res.ok || !contentType || !contentType.includes('application/json')) throw new Error();
+      return await res.json();
     } catch (e) {
-      return MOCK_PRODUCTS;
+      return MOCK_PRODUCTS || [];
     }
   },
 
   async getProduct(id: string): Promise<Product> {
     try {
       const res = await fetch(`${API_BASE}/products/${id}`);
-      return await handleResponse(res);
+      const contentType = res.headers.get('content-type');
+      if (!res.ok || !contentType || !contentType.includes('application/json')) throw new Error();
+      return await res.json();
     } catch (e) {
       const p = MOCK_PRODUCTS.find(p => p.id === id);
       if (!p) throw new Error('Product not found');
@@ -106,7 +104,9 @@ export const api = {
         headers: getHeaders(),
         body: JSON.stringify(orderData)
       });
-      return await handleResponse(res);
+      const contentType = res.headers.get('content-type');
+      if (!res.ok || !contentType || !contentType.includes('application/json')) throw new Error();
+      return await res.json();
     } catch (e) {
       const userStr = localStorage.getItem('user');
       const user = userStr ? JSON.parse(userStr) : null;
@@ -127,21 +127,28 @@ export const api = {
       const res = await fetch(`${API_BASE}/user/orders`, {
         headers: getHeaders()
       });
-      return await handleResponse(res);
+      const contentType = res.headers.get('content-type');
+      if (!res.ok || !contentType || !contentType.includes('application/json')) throw new Error();
+      return await res.json();
     } catch (e) {
       const userStr = localStorage.getItem('user');
       const user = userStr ? JSON.parse(userStr) : null;
-      if (!user) return [];
-      return getLocalOrders(user.id);
+      return user ? getLocalOrders(user.id) : [];
     }
   },
 
   // Admin
   async getAllOrders(): Promise<Order[]> {
-    const res = await fetch(`${API_BASE}/admin/orders`, {
-      headers: getHeaders()
-    });
-    return res.json();
+    try {
+      const res = await fetch(`${API_BASE}/admin/orders`, {
+        headers: getHeaders()
+      });
+      const contentType = res.headers.get('content-type');
+      if (!res.ok || !contentType || !contentType.includes('application/json')) throw new Error([]);
+      return await res.json();
+    } catch (e) {
+      return [];
+    }
   },
 
   async addProduct(productData: any): Promise<Product> {
